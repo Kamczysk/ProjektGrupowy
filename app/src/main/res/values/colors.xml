@@ -3,9 +3,9 @@
     <color name="black">#FF000000</color>
     <color name="white">#FFFFFFFF</color>
 
-    <color name="violet_background">#561CCA</color>
-    <color name="violet_surface">#8778ED</color>
-    <color name="violet_accent">#4B47D9</color>
+    <color name="violet_background">#21D7EB</color>
+    <color name="violet_surface">#69DC8A</color>
+    <color name="violet_accent">#15696F</color>
     <color name="text_light">#EDE7F6</color>
     <color name="text_hint">#B39DDB</color>
 </resources>

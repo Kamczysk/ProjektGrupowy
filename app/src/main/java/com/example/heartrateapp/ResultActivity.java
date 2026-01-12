@@ -33,6 +33,15 @@ public class ResultActivity extends AppCompatActivity {
             }
         });
 
+        // Przycisk: Relaks (menu z ćwiczeniami i grą)
+        findViewById(R.id.btnRelax).setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Intent intent = new Intent(ResultActivity.this, RelaxMenuActivity.class);
+                startActivity(intent);
+            }
+        });
+
         // Przycisk: Powrót (zamyka ten ekran, wracając do Menu)
         findViewById(R.id.btnHome).setOnClickListener(new View.OnClickListener() {
             @Override

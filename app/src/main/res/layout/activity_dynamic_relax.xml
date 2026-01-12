@@ -1,0 +1,85 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:background="@color/violet_background"
+    android:padding="24dp"
+    android:gravity="center_horizontal">
+
+    <TextView
+        android:id="@+id/txtStepTitle"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Start"
+        android:textSize="24sp"
+        android:textStyle="bold"
+        android:textColor="@color/text_light"
+        android:layout_marginTop="24dp"
+        android:layout_marginBottom="12dp" />
+
+    <TextView
+        android:id="@+id/txtStepHint"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Instrukcja..."
+        android:textSize="16sp"
+        android:textColor="@color/text_hint"
+        android:gravity="center"
+        android:layout_marginBottom="20dp" />
+
+    <TextView
+        android:id="@+id/txtStepTimer"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="0:00"
+        android:textSize="42sp"
+        android:textStyle="bold"
+        android:textColor="@color/text_light"
+        android:layout_marginBottom="24dp" />
+
+    <Button
+        android:id="@+id/btnStartPause"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Start"
+        android:textColor="@color/white"
+        android:backgroundTint="@color/violet_surface"
+        android:layout_marginBottom="12dp" />
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal">
+
+        <Button
+            android:id="@+id/btnPrevStep"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="Wstecz"
+            android:textColor="@color/white"
+            android:backgroundTint="@color/violet_surface"
+            android:layout_marginEnd="8dp" />
+
+        <Button
+            android:id="@+id/btnNextStep"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="Dalej"
+            android:textColor="@color/white"
+            android:backgroundTint="@color/violet_surface"
+            android:layout_marginStart="8dp" />
+    </LinearLayout>
+
+    <Button
+        android:id="@+id/btnFinishRelax"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Zakończ"
+        android:backgroundTint="#00000000"
+        android:textColor="@color/text_hint"
+        android:layout_marginTop="16dp" />
+
+</LinearLayout>

@@ -30,6 +30,15 @@ public class MainActivity extends AppCompatActivity {
         });
 
         // Obsługa przycisku Ustawienia (tylko komunikat)
+
+        // Obsługa przycisku Relaks (menu ćwiczenia / gra)
+        findViewById(R.id.btnRelax).setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Intent intent = new Intent(MainActivity.this, RelaxMenuActivity.class);
+                startActivity(intent);
+            }
+        });
         findViewById(R.id.btnSettings).setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {

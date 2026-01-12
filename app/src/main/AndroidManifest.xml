@@ -19,6 +19,15 @@
             android:name=".ResultActivity"
             android:exported="false" />
         <activity
+            android:name=".RelaxMenuActivity"
+            android:exported="false" />
+        <activity
+            android:name=".DynamicRelaxActivity"
+            android:exported="false" />
+        <activity
+            android:name=".Game2048Activity"
+            android:exported="false" />
+        <activity
             android:name=".MeasurementActivity"
             android:exported="false" />
         <activity

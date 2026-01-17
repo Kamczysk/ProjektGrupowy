@@ -46,5 +46,7 @@ dependencies {
     implementation("androidx.camera:camera-camera2:$cameraVersion")
     implementation("androidx.camera:camera-lifecycle:$cameraVersion")
     implementation("androidx.camera:camera-view:$cameraVersion")
+    //biblioteka do analizy obrazu
+    implementation("androidx.camera:camera-core:${cameraVersion}")
 
 }

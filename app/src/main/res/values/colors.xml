@@ -3,9 +3,13 @@
     <color name="black">#FF000000</color>
     <color name="white">#FFFFFFFF</color>
 
-    <color name="violet_background">#21D7EB</color>
-    <color name="violet_surface">#69DC8A</color>
-    <color name="violet_accent">#15696F</color>
-    <color name="text_light">#EDE7F6</color>
-    <color name="text_hint">#B39DDB</color>
+    <color name="calm_background">#1F3645</color>
+    <color name="calm_surface">#486A80</color>
+    <color name="calm_accent">#64FFDA</color>
+    <color name="calm_secondary">#8899A6</color>
+
+    <color name="text_primary">#E0E6ED</color>
+    <color name="text_hint">#8B98A5</color>
+
+    <color name="success_green">#A5D6A7</color>
 </resources>

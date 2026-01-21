@@ -4,17 +4,17 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="vertical"
-    android:background="@color/violet_background"
+    android:background="@color/calm_background"
     android:padding="24dp"
     android:gravity="center_horizontal">
 
     <TextView
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="Relaks"
+        android:text="Strefa Relaksu"
         android:textSize="28sp"
         android:textStyle="bold"
-        android:textColor="@color/text_light"
+        android:textColor="@color/calm_accent"
         android:layout_marginTop="24dp"
         android:layout_marginBottom="24dp" />
 
@@ -24,8 +24,8 @@
         android:layout_height="140dp"
         android:layout_marginBottom="16dp"
         app:cardCornerRadius="20dp"
-        app:cardElevation="10dp"
-        app:cardBackgroundColor="@color/violet_surface"
+        app:cardElevation="5dp"
+        app:cardBackgroundColor="@color/calm_surface"
         app:strokeWidth="0dp">
 
         <LinearLayout
@@ -41,14 +41,14 @@
                 android:text="🧘 Ćwiczenia dynamiczne"
                 android:textSize="18sp"
                 android:textStyle="bold"
-                android:textColor="@color/text_light" />
+                android:textColor="@color/text_primary" />
 
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="Krótka sekwencja ruch + oddech (timer)"
                 android:textSize="12sp"
-                android:textColor="@color/black"
+                android:textColor="@color/text_hint"
                 android:layout_marginTop="8dp" />
         </LinearLayout>
     </com.google.android.material.card.MaterialCardView>
@@ -59,8 +59,8 @@
         android:layout_height="140dp"
         android:layout_marginBottom="24dp"
         app:cardCornerRadius="20dp"
-        app:cardElevation="10dp"
-        app:cardBackgroundColor="@color/violet_surface"
+        app:cardElevation="5dp"
+        app:cardBackgroundColor="@color/calm_surface"
         app:strokeWidth="0dp">
 
         <LinearLayout
@@ -76,14 +76,14 @@
                 android:text="🧩 Gra 2048"
                 android:textSize="18sp"
                 android:textStyle="bold"
-                android:textColor="@color/text_light" />
+                android:textColor="@color/text_primary" />
 
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="Puzzle na uspokojenie i reset"
                 android:textSize="12sp"
-                android:textColor="@color/black"
+                android:textColor="@color/text_hint"
                 android:layout_marginTop="8dp" />
         </LinearLayout>
     </com.google.android.material.card.MaterialCardView>

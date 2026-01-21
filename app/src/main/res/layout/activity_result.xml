@@ -5,12 +5,12 @@
     android:orientation="vertical"
     android:gravity="center"
     android:padding="30dp"
-    android:background="@color/violet_background">
+    android:background="@color/calm_background">
 
     <TextView
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="Twój Wynik"
+        android:text="Poziom Tętna"
         android:textSize="28sp"
         android:textColor="@color/text_hint"/>
 
@@ -19,18 +19,17 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text="nie wiem"
-        android:textSize="32sp"
+        android:textSize="36sp"
         android:textStyle="bold"
         android:gravity="center"
-        android:textColor="@color/text_light"
+        android:textColor="@color/calm_accent"
         android:layout_margin="30dp"/>
 
     <TextView
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="jeszcze."
         android:textSize="18sp"
-        android:textColor="@color/text_light"
+        android:textColor="@color/text_primary"
         android:gravity="center"
         android:layout_marginBottom="50dp"/>
 
@@ -39,8 +38,8 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:text="Zmierz ponownie"
-        android:textColor="@color/white"
-        android:backgroundTint="@color/violet_surface"
+        android:textColor="@color/text_primary"
+        android:backgroundTint="@color/calm_surface"
         android:layout_marginBottom="10dp"/>
 
     <Button
@@ -48,8 +47,9 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:text="Relaks (ćwiczenia / gra)"
-        android:textColor="@color/white"
-        android:backgroundTint="@color/violet_accent"
+        android:textColor="@color/calm_background"
+        android:backgroundTint="@color/calm_accent"
+        android:textStyle="bold"
         android:layout_marginBottom="10dp"/>
 
     <Button

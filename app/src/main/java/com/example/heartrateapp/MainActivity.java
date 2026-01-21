@@ -2,52 +2,58 @@ package com.example.heartrateapp;
 
 import android.content.Intent;
 import android.os.Bundle;
-import android.view.View;
-import android.widget.Toast;
+import android.widget.Button;
+
 import androidx.appcompat.app.AppCompatActivity;
+import com.google.android.material.floatingactionbutton.FloatingActionButton;
 
 public class MainActivity extends AppCompatActivity {
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        // Uruchamiamy serwis muzyczny w tle
+        // 1. Uruchamiamy serwis (ale on teraz siedzi cicho i czeka)
         Intent musicIntent = new Intent(this, MusicService.class);
         startService(musicIntent);
 
-        // Obsługa kliknięcia w kartę "Pomiar"
-        findViewById(R.id.cardMeasure).setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                Intent intent = new Intent(MainActivity.this, MeasurementActivity.class);
-                startActivity(intent);
-            }
+        // ZMIANA: Usunąłem "MusicService.isMusicPlaying = true", bo domyślnie jest false.
+
+        // 2. Obsługa przycisku muzyki
+        FloatingActionButton btnMusic = findViewById(R.id.btnMusicToggle);
+
+        // Ustawienie początkowej ikony (Będzie przekreślona, bo isMusicPlaying jest false)
+        updateMusicIcon(btnMusic);
+
+        btnMusic.setOnClickListener(v -> {
+            // Wysyłamy sygnał "Włącz/Wyłącz"
+            Intent toggleIntent = new Intent(this, MusicService.class);
+            toggleIntent.setAction("ACTION_TOGGLE");
+            startService(toggleIntent);
+
+            // Zmieniamy stan w pamięci (z false na true i odwrotnie)
+            MusicService.isMusicPlaying = !MusicService.isMusicPlaying;
+
+            // Aktualizujemy ikonę
+            updateMusicIcon(btnMusic);
         });
 
-        // Obsługa przycisku Profil (tylko komunikat)
-        findViewById(R.id.btnProfile).setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                Toast.makeText(MainActivity.this, "Profil(chyba)", Toast.LENGTH_SHORT).show();
-            }
+        // --- RESZTA PRZYCISKÓW ---
+        findViewById(R.id.cardMeasure).setOnClickListener(v -> {
+            startActivity(new Intent(MainActivity.this, MeasurementActivity.class));
         });
 
-        // Obsługa przycisku Ustawienia (tylko komunikat)
+        // Tutaj reszta Twoich przycisków (Settings, Relax itp.)
+    }
 
-        // Obsługa przycisku Relaks (menu ćwiczenia / gra)
-        findViewById(R.id.btnRelax).setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                Intent intent = new Intent(MainActivity.this, RelaxMenuActivity.class);
-                startActivity(intent);
-            }
-        });
-        findViewById(R.id.btnSettings).setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                Toast.makeText(MainActivity.this, "Ustawienia(może)", Toast.LENGTH_SHORT).show();
-            }
-        });
+    private void updateMusicIcon(FloatingActionButton btn) {
+        if (MusicService.isMusicPlaying) {
+            // Muzyka gra -> ikona normalna
+            btn.setImageResource(R.drawable.ic_music_on);
+        } else {
+            // Muzyka STOP -> ikona przekreślona
+            btn.setImageResource(R.drawable.ic_music_off);
+        }
     }
 }

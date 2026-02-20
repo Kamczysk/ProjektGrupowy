@@ -130,10 +130,12 @@ public class MeasurementActivity extends AppCompatActivity {
     }
 
     private void startTimer() {
-        measurementTimer = new android.os.CountDownTimer(15000, 1000) {
+        // ZMIANA: Interwał z 1000 na 100 milisekund
+        measurementTimer = new android.os.CountDownTimer(15000, 100) {
             @Override
             public void onTick(long millisUntilFinished) {
-                int secondsRemaining = (int) (millisUntilFinished / 1000);
+                // Używamy Math.ceil, żeby ładnie zaokrąglało w górę (np. 14.2s pokaże jako 15s)
+                int secondsRemaining = (int) Math.ceil(millisUntilFinished / 1000.0);
                 txtTimer.setText("Pozostało: " + secondsRemaining + " s");
             }
 

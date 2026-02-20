@@ -14,19 +14,19 @@ public class PulseAnalyzer implements androidx.camera.core.ImageAnalysis.Analyze
     private double lastFilteredValue = 0;
     private boolean isDropping = false;
 
+    // Zmienne do Auto-Kontrastu (Dynamicznej Amplitudy)
     private double valleyValue = 999;
-    // ZMIANA: Zwiększony próg czułości na szum (ignoruje małe skoki)
-    private static final double MIN_AMPLITUDE = 2.0;
+    private double peakValue = 0;
+    private double dynamicThreshold = 1.0; // Początkowa, domyślna czułość
 
-    private static final long MIN_TIME_BETWEEN_BEATS_MS = 450;
+    private static final long MIN_TIME_BETWEEN_BEATS_MS = 400; // Zabezpiecza do 150 BPM
     private long lastBeatTime = 0;
 
     private final java.util.ArrayList<Integer> bpmHistory = new java.util.ArrayList<>();
     private static final int HISTORY_SIZE = 9;
 
-    // NOWOŚĆ: Bufor do mocniejszego wygładzania sygnału
     private final java.util.ArrayList<Double> smoothingBuffer = new java.util.ArrayList<>();
-    private static final int SMOOTHING_WINDOW = 8; // Uśredniamy n ostatnich klatek
+    private static final int SMOOTHING_WINDOW = 5; // Mniejsze wygładzanie, szybsza reakcja
 
     private long startTime = 0;
     private static final long WARMUP_TIME_MS = 3000;
@@ -58,15 +58,13 @@ public class PulseAnalyzer implements androidx.camera.core.ImageAnalysis.Analyze
             long totalBrightness = 0;
             int validPixelCount = 0;
 
-            // ZMIANA: Skanujemy cały ekran, ale co 5 pikseli (dla szybkości)
             for (int y = 0; y < height; y += 5) {
                 for (int x = 0; x < width; x += 5) {
                     int index = y * width + x;
                     if (index < data.length) {
                         int pixelValue = data[index] & 0xFF;
 
-                        // ZMIANA: "Matematyczny Pierścień"
-                        // Ignorujemy prześwietlony środek (> 245) i czarne krawędzie (< 50)
+                        // Zostawiamy matematyczny pierścień - omijamy przepalony środek latarki
                         if (pixelValue > 50 && pixelValue < 245) {
                             totalBrightness += pixelValue;
                             validPixelCount++;
@@ -75,7 +73,6 @@ public class PulseAnalyzer implements androidx.camera.core.ImageAnalysis.Analyze
                 }
             }
 
-            // Jeśli cały ekran jest prześwietlony lub czarny, ignorujemy klatkę
             if (validPixelCount == 0) {
                 image.close();
                 return;
@@ -83,19 +80,20 @@ public class PulseAnalyzer implements androidx.camera.core.ImageAnalysis.Analyze
 
             double currentRawValue = (double) totalBrightness / validPixelCount;
 
-            // ZMIANA: Mocniejsze wygładzanie (Średnia Krocząca)
+            // Wygładzanie
             smoothingBuffer.add(currentRawValue);
             if (smoothingBuffer.size() > SMOOTHING_WINDOW) {
                 smoothingBuffer.remove(0);
             }
-
             double sum = 0;
-            for (double val : smoothingBuffer) {
-                sum += val;
-            }
+            for (double val : smoothingBuffer) { sum += val; }
             double currentFiltered = sum / smoothingBuffer.size();
 
-            // Reszta algorytmu (szukanie dołka i obliczanie BPM)
+            // Aktualizujemy najwyższy punkt fali
+            if (currentFiltered > peakValue) {
+                peakValue = currentFiltered;
+            }
+
             if (currentFiltered < lastFilteredValue) {
                 isDropping = true;
                 if (currentFiltered < valleyValue) {
@@ -103,9 +101,23 @@ public class PulseAnalyzer implements androidx.camera.core.ImageAnalysis.Analyze
                 }
             }
             else if (currentFiltered > lastFilteredValue && isDropping) {
-                if (currentFiltered - valleyValue >= MIN_AMPLITUDE) {
+
+                // Obliczamy wielkość fali (kontrast) między szczytem a dnem
+                double waveAmplitude = peakValue - valleyValue;
+
+                // Ustawiamy czułość na 30% wielkości fali.
+                // To jest Twoje oszukanie algorytmu! Ignoruje całkowitą jasność latarki.
+                if (waveAmplitude > 0.5) {
+                    dynamicThreshold = waveAmplitude * 0.3;
+                }
+
+                // Sprawdzamy czy odbicie jest wystarczająco mocne
+                if (currentFiltered - valleyValue >= dynamicThreshold) {
                     isDropping = false;
+
+                    // Resetujemy dołek i szczyt dla kolejnego uderzenia
                     valleyValue = 999;
+                    peakValue = 0;
 
                     long timeDifference = currentTime - lastBeatTime;
 

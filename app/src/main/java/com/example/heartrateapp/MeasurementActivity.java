@@ -1,6 +1,5 @@
 package com.example.heartrateapp;
 
-// --- WSZYSTKIE POTRZEBNE IMPORTY ---
 import android.Manifest;
 import android.app.AlertDialog;
 import android.content.Intent;
@@ -33,91 +32,65 @@ public class MeasurementActivity extends AppCompatActivity {
     private PreviewView viewFinder;
     private Camera camera;
     private static final int CAMERA_PERMISSION_CODE = 100;
-    private long lastBeatTime = 0;
-    private int currentHeartRate = 0;
+    private int currentHeartRate = 0; // Tu będziemy zapisywać wynik z algorytmu
     private TextView txtTimer;
     private android.os.CountDownTimer measurementTimer;
 
-    // Przyciski jako zmienne klasowe, żeby mieć do nich dostęp wszędzie
     private Button btnStart;
     private Button btnInstruction;
-
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_measurement);
 
-        // 1. Znajdowanie widoków
         viewFinder = findViewById(R.id.viewFinder);
         txtTimer = findViewById(R.id.txtTimer);
-        // Uwaga: zmieniłem ID przycisku start w XML na bardziej logiczne
         btnStart = findViewById(R.id.btnStartMeasurement);
         btnInstruction = findViewById(R.id.btnShowInstruction);
 
-        // 2. Sprawdzenie uprawnień i start kamery
         if (checkCameraPermission()) {
             startCamera();
         } else {
             requestCameraPermission();
         }
 
-        // 3. OBSŁUGA PRZYCISKU INSTRUKCJI (NAPRAWIONA)
-        btnInstruction.setOnClickListener(v -> {
-            // Po kliknięciu ma się TYLKO pokazać okienko.
-            // Przycisk nie powinien znikać, bo może ktoś chce przeczytać jeszcze raz.
-            showInstructionDialog();
-        });
+        btnInstruction.setOnClickListener(v -> showInstructionDialog());
 
-        // 4. OBSŁUGA PRZYCISKU START (NAPRAWIONA)
         btnStart.setOnClickListener(v -> {
-            // Ten przycisk powinien działać ZAWSZE.
-
-            // Ukrywamy OBA przyciski, żeby nie przeszkadzały podczas pomiaru
             btnStart.setVisibility(View.GONE);
             btnInstruction.setVisibility(View.GONE);
 
-            // Resetujemy wynik i startujemy timer
             currentHeartRate = 0;
             txtTimer.setText("Przygotowanie...");
-            // Dajemy chwilę na ustabilizowanie palca przed startem odliczania
             viewFinder.postDelayed(() -> startTimer(), 1000);
         });
     }
 
-    // --- Metoda wyświetlająca okienko z instrukcją ---
     private void showInstructionDialog() {
         try {
             AlertDialog.Builder builder = new AlertDialog.Builder(this);
             LayoutInflater inflater = this.getLayoutInflater();
-            // Upewnij się, że plik dialog_instructions.xml istnieje!
             View dialogView = inflater.inflate(R.layout.activity_instructions, null);
             builder.setView(dialogView);
 
             AlertDialog dialog = builder.create();
-            // Przezroczyste tło dla ładnych zaokrąglonych rogów
             if (dialog.getWindow() != null) {
                 dialog.getWindow().setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
             }
             dialog.show();
 
-            // Obsługa przycisku "Zamknij" wewnątrz okienka
             Button btnClose = dialogView.findViewById(R.id.btnCloseDialog);
             btnClose.setOnClickListener(v -> dialog.dismiss());
 
         } catch (Exception e) {
-            // Jeśli coś pójdzie nie tak, wyświetli się komunikat błędu
             Toast.makeText(this, "Błąd otwarcia instrukcji: " + e.getMessage(), Toast.LENGTH_LONG).show();
             e.printStackTrace();
         }
     }
 
-    // --- POZOSTAŁE METODY (startCamera, startTimer, permission) BEZ ZMIAN ---
-    // (Dla pewności wklejam je tutaj, żebyś miał kompletny plik)
-
     private void startCamera() {
-        ListenableFuture<ProcessCameraProvider> cameraProviderFuture =
-                ProcessCameraProvider.getInstance(this);
+        ListenableFuture<ProcessCameraProvider> cameraProviderFuture = ProcessCameraProvider.getInstance(this);
 
         cameraProviderFuture.addListener(() -> {
             try {
@@ -131,12 +104,16 @@ public class MeasurementActivity extends AppCompatActivity {
                                 .setTargetResolution(new android.util.Size(640, 480))
                                 .build();
 
-                imageAnalysis.setAnalyzer(ContextCompat.getMainExecutor(this), new HeartRateAnalyzer());
+                //Tutaj podpinamy PulseAnalyzer
+                imageAnalysis.setAnalyzer(ContextCompat.getMainExecutor(this), new PulseAnalyzer(bpm -> {
+                    currentHeartRate = bpm;
+                }));
+
                 CameraSelector cameraSelector = CameraSelector.DEFAULT_BACK_CAMERA;
 
                 try {
                     cameraProvider.unbindAll();
-                    camera = cameraProvider.bindToLifecycle(this, cameraSelector, preview,imageAnalysis);
+                    camera = cameraProvider.bindToLifecycle(this, cameraSelector, preview, imageAnalysis);
 
                     if (camera.getCameraInfo().hasFlashUnit()) {
                         camera.getCameraControl().enableTorch(true);
@@ -189,13 +166,11 @@ public class MeasurementActivity extends AppCompatActivity {
     }
 
     private boolean checkCameraPermission() {
-        return ContextCompat.checkSelfPermission(this, Manifest.permission.CAMERA)
-                == PackageManager.PERMISSION_GRANTED;
+        return ContextCompat.checkSelfPermission(this, Manifest.permission.CAMERA) == PackageManager.PERMISSION_GRANTED;
     }
 
     private void requestCameraPermission() {
-        ActivityCompat.requestPermissions(this,
-                new String[]{Manifest.permission.CAMERA}, CAMERA_PERMISSION_CODE);
+        ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.CAMERA}, CAMERA_PERMISSION_CODE);
     }
 
     @Override
@@ -207,112 +182,6 @@ public class MeasurementActivity extends AppCompatActivity {
             } else {
                 Toast.makeText(this, "Wymagany dostęp do kamery!", Toast.LENGTH_LONG).show();
                 finish();
-            }
-        }
-    }
-
-    private class HeartRateAnalyzer implements androidx.camera.core.ImageAnalysis.Analyzer {
-
-        private double lastFilteredValue = 0;
-        private boolean isDropping = false;
-        private static final long MIN_TIME_BETWEEN_BEATS_MS = 400;
-
-        private final java.util.ArrayList<Integer> bpmHistory = new java.util.ArrayList<>();
-        private static final int HISTORY_SIZE = 9;
-
-        // chwila dla kamery żeby sie uspokoiła
-        private long startTime = 0;
-        private static final long WARMUP_TIME_MS = 3000; // 3 sekundy ignorowania
-
-        @Override
-        public void analyze(@NonNull androidx.camera.core.ImageProxy image) {
-            long currentTime = System.currentTimeMillis();
-
-            // --- ZMIANA 1: Rozgrzewka kamery ---
-            if (startTime == 0) {
-                startTime = currentTime;
-            }
-            // Jeśli nie minęły jeszcze 3 sekundy, ignorujemy klatkę i wychodzimy
-            if (currentTime - startTime < WARMUP_TIME_MS) {
-                image.close();
-                return;
-            }
-
-            try {
-                // Odczyt jasności (Luminancja)
-                java.nio.ByteBuffer buffer = image.getPlanes()[0].getBuffer();
-                byte[] data = new byte[buffer.remaining()];
-                buffer.get(data);
-
-                int width = image.getWidth();
-                int height = image.getHeight();
-
-                // Zamiast całego ekranu, badamy tylko kwadrat 100x100 na samym środku.
-                int boxSize = 100;
-                int startX = (width - boxSize) / 2;
-                int startY = (height - boxSize) / 2;
-
-                long totalBrightness = 0;
-                int pixelCount = 0;
-
-                for (int y = startY; y < startY + boxSize; y++) {
-                    for (int x = startX; x < startX + boxSize; x++) {
-                        int index = y * width + x;
-                        if (index < data.length) {
-                            totalBrightness += (data[index] & 0xFF);
-                            pixelCount++;
-                        }
-                    }
-                }
-
-                if (pixelCount == 0) {
-                    image.close();
-                    return;
-                }
-
-                // Średnia jasność ze środka ekranu
-                double currentRawValue = (double) totalBrightness / pixelCount;
-
-                // Zabezpieczenie przed czarnym ekranem
-                if (currentRawValue < 50) {
-                    bpmHistory.clear(); // Czyścimy historię, bo pomiar został zakłócony
-                    image.close();
-                    return;
-                }
-
-                //Wygładzanie
-                double currentFiltered = (currentRawValue + lastFilteredValue) / 2;
-
-                if (currentFiltered < lastFilteredValue) {
-                    isDropping = true;
-                } else if (currentFiltered > lastFilteredValue && isDropping) {
-                    isDropping = false;
-                    long timeDifference = currentTime - lastBeatTime;
-
-                    if (timeDifference > MIN_TIME_BETWEEN_BEATS_MS) {
-                        double instantBpm = 60000.0 / timeDifference;
-
-                        if (instantBpm > 45 && instantBpm < 170) {
-                            bpmHistory.add((int) instantBpm);
-                            if (bpmHistory.size() > HISTORY_SIZE) {
-                                bpmHistory.remove(0);
-                            }
-
-                            java.util.ArrayList<Integer> sortedHistory = new java.util.ArrayList<>(bpmHistory);
-                            java.util.Collections.sort(sortedHistory);
-                            int medianBpm = sortedHistory.get(sortedHistory.size() / 2);
-
-                            currentHeartRate = medianBpm;
-                        }
-                        lastBeatTime = currentTime;
-                    }
-                }
-                lastFilteredValue = currentFiltered;
-
-            } catch (Exception e) {
-                e.printStackTrace();
-            } finally {
-                image.close();
             }
         }
     }

@@ -7,6 +7,8 @@ public class PulseAnalyzer implements androidx.camera.core.ImageAnalysis.Analyze
 
     public interface PulseListener {
         void onPulseDetected(int bpm);
+        // ZMIANA: Dodano boolean isPeak, żeby wykres wiedział, kiedy rysować kropkę
+        void onSignalUpdate(double signalValue, boolean isPeak);
     }
 
     private final PulseListener listener;
@@ -14,19 +16,18 @@ public class PulseAnalyzer implements androidx.camera.core.ImageAnalysis.Analyze
     private double lastFilteredValue = 0;
     private boolean isDropping = false;
 
-    // Zmienne do Auto-Kontrastu (Dynamicznej Amplitudy)
     private double valleyValue = 999;
     private double peakValue = 0;
-    private double dynamicThreshold = 1.0; // Początkowa, domyślna czułość
+    private double dynamicThreshold = 1.0;
 
-    private static final long MIN_TIME_BETWEEN_BEATS_MS = 400; // Zabezpiecza do 150 BPM
+    private static final long MIN_TIME_BETWEEN_BEATS_MS = 400;
     private long lastBeatTime = 0;
 
     private final java.util.ArrayList<Integer> bpmHistory = new java.util.ArrayList<>();
     private static final int HISTORY_SIZE = 9;
 
     private final java.util.ArrayList<Double> smoothingBuffer = new java.util.ArrayList<>();
-    private static final int SMOOTHING_WINDOW = 5; // Mniejsze wygładzanie, szybsza reakcja
+    private static final int SMOOTHING_WINDOW = 5;
 
     private long startTime = 0;
     private static final long WARMUP_TIME_MS = 3000;
@@ -64,7 +65,6 @@ public class PulseAnalyzer implements androidx.camera.core.ImageAnalysis.Analyze
                     if (index < data.length) {
                         int pixelValue = data[index] & 0xFF;
 
-                        // Zostawiamy matematyczny pierścień - omijamy przepalony środek latarki
                         if (pixelValue > 50 && pixelValue < 245) {
                             totalBrightness += pixelValue;
                             validPixelCount++;
@@ -80,7 +80,6 @@ public class PulseAnalyzer implements androidx.camera.core.ImageAnalysis.Analyze
 
             double currentRawValue = (double) totalBrightness / validPixelCount;
 
-            // Wygładzanie
             smoothingBuffer.add(currentRawValue);
             if (smoothingBuffer.size() > SMOOTHING_WINDOW) {
                 smoothingBuffer.remove(0);
@@ -89,10 +88,12 @@ public class PulseAnalyzer implements androidx.camera.core.ImageAnalysis.Analyze
             for (double val : smoothingBuffer) { sum += val; }
             double currentFiltered = sum / smoothingBuffer.size();
 
-            // Aktualizujemy najwyższy punkt fali
             if (currentFiltered > peakValue) {
                 peakValue = currentFiltered;
             }
+
+            // ZMIANA: Zmienna mówiąca, czy w tej konkretnej klatce wykryto uderzenie
+            boolean isPeakNow = false;
 
             if (currentFiltered < lastFilteredValue) {
                 isDropping = true;
@@ -102,26 +103,23 @@ public class PulseAnalyzer implements androidx.camera.core.ImageAnalysis.Analyze
             }
             else if (currentFiltered > lastFilteredValue && isDropping) {
 
-                // Obliczamy wielkość fali (kontrast) między szczytem a dnem
                 double waveAmplitude = peakValue - valleyValue;
-
-                // Ustawiamy czułość na 30% wielkości fali.
-                // To jest Twoje oszukanie algorytmu! Ignoruje całkowitą jasność latarki.
                 if (waveAmplitude > 0.5) {
                     dynamicThreshold = waveAmplitude * 0.3;
                 }
 
-                // Sprawdzamy czy odbicie jest wystarczająco mocne
                 if (currentFiltered - valleyValue >= dynamicThreshold) {
                     isDropping = false;
-
-                    // Resetujemy dołek i szczyt dla kolejnego uderzenia
                     valleyValue = 999;
                     peakValue = 0;
 
                     long timeDifference = currentTime - lastBeatTime;
 
                     if (timeDifference > MIN_TIME_BETWEEN_BEATS_MS) {
+
+                        // ZMIANA: Zaznaczamy, że mamy uderzenie!
+                        isPeakNow = true;
+
                         double instantBpm = 60000.0 / timeDifference;
 
                         if (instantBpm > 45 && instantBpm < 170) {
@@ -143,6 +141,11 @@ public class PulseAnalyzer implements androidx.camera.core.ImageAnalysis.Analyze
                 }
             }
             lastFilteredValue = currentFiltered;
+
+            // ZMIANA: Wysyłamy do wykresu wartość jasności ORAZ informację, czy rysować kropkę
+            if (listener != null) {
+                listener.onSignalUpdate(currentFiltered, isPeakNow);
+            }
 
         } catch (Exception e) {
             e.printStackTrace();

@@ -32,12 +32,16 @@ public class MeasurementActivity extends AppCompatActivity {
     private PreviewView viewFinder;
     private Camera camera;
     private static final int CAMERA_PERMISSION_CODE = 100;
-    private int currentHeartRate = 0; // Tu będziemy zapisywać wynik z algorytmu
+    private int currentHeartRate = 0;
+
     private TextView txtTimer;
     private android.os.CountDownTimer measurementTimer;
 
     private Button btnStart;
     private Button btnInstruction;
+
+    private RealtimeGraphView graphView;
+    // Usunięto całkowicie txtLiveBpm
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -48,6 +52,7 @@ public class MeasurementActivity extends AppCompatActivity {
         txtTimer = findViewById(R.id.txtTimer);
         btnStart = findViewById(R.id.btnStartMeasurement);
         btnInstruction = findViewById(R.id.btnShowInstruction);
+        graphView = findViewById(R.id.realtimeGraph);
 
         if (checkCameraPermission()) {
             startCamera();
@@ -58,13 +63,30 @@ public class MeasurementActivity extends AppCompatActivity {
         btnInstruction.setOnClickListener(v -> showInstructionDialog());
 
         btnStart.setOnClickListener(v -> {
-            btnStart.setVisibility(View.GONE);
-            btnInstruction.setVisibility(View.GONE);
+            // ZMIANA: Zamiast GONE jest INVISIBLE. Przycisk znika, ale trzyma puste miejsce,
+            // dzięki czemu ekran i wykres nie przeskakują.
+            btnStart.setVisibility(View.INVISIBLE);
+            btnInstruction.setVisibility(View.INVISIBLE);
 
             currentHeartRate = 0;
             txtTimer.setText("Przygotowanie...");
-            viewFinder.postDelayed(() -> startTimer(), 1000);
+
+            viewFinder.postDelayed(this::startTimer, 1000);
         });
+
+        // --- ANIMACJA ODDYCHAJĄCEGO OKRĘGU ---
+        View targetView = findViewById(R.id.roiTarget);
+        android.animation.ObjectAnimator scaleX = android.animation.ObjectAnimator.ofFloat(targetView, "scaleX", 1f, 1.2f, 1f);
+        android.animation.ObjectAnimator scaleY = android.animation.ObjectAnimator.ofFloat(targetView, "scaleY", 1f, 1.2f, 1f);
+
+        scaleX.setRepeatCount(android.animation.ValueAnimator.INFINITE);
+        scaleY.setRepeatCount(android.animation.ValueAnimator.INFINITE);
+
+        scaleX.setDuration(4000);
+        scaleY.setDuration(4000);
+
+        scaleX.start();
+        scaleY.start();
     }
 
     private void showInstructionDialog() {
@@ -104,9 +126,23 @@ public class MeasurementActivity extends AppCompatActivity {
                                 .setTargetResolution(new android.util.Size(640, 480))
                                 .build();
 
-                //Tutaj podpinamy PulseAnalyzer
-                imageAnalysis.setAnalyzer(ContextCompat.getMainExecutor(this), new PulseAnalyzer(bpm -> {
-                    currentHeartRate = bpm;
+                // ZMIANA: Obsługa nowego interfejsu (z flagą isPeak) i wyrzucenie kodu od txtLiveBpm
+                imageAnalysis.setAnalyzer(ContextCompat.getMainExecutor(this), new PulseAnalyzer(new PulseAnalyzer.PulseListener() {
+
+                    @Override
+                    public void onPulseDetected(int bpm) {
+                        currentHeartRate = bpm;
+                    }
+
+                    @Override
+                    public void onSignalUpdate(double signalValue, boolean isPeak) {
+                        runOnUiThread(() -> {
+                            if (graphView != null) {
+                                // Wysyłamy wartość i informację, czy rysować kropkę!
+                                graphView.addDataPoint((float) signalValue, isPeak);
+                            }
+                        });
+                    }
                 }));
 
                 CameraSelector cameraSelector = CameraSelector.DEFAULT_BACK_CAMERA;
@@ -130,11 +166,9 @@ public class MeasurementActivity extends AppCompatActivity {
     }
 
     private void startTimer() {
-        // ZMIANA: Interwał z 1000 na 100 milisekund
         measurementTimer = new android.os.CountDownTimer(15000, 100) {
             @Override
             public void onTick(long millisUntilFinished) {
-                // Używamy Math.ceil, żeby ładnie zaokrąglało w górę (np. 14.2s pokaże jako 15s)
                 int secondsRemaining = (int) Math.ceil(millisUntilFinished / 1000.0);
                 txtTimer.setText("Pozostało: " + secondsRemaining + " s");
             }
@@ -145,6 +179,7 @@ public class MeasurementActivity extends AppCompatActivity {
                 if (camera != null && camera.getCameraInfo().hasFlashUnit()) {
                     camera.getCameraControl().enableTorch(false);
                 }
+
                 Intent intent = new Intent(MeasurementActivity.this, ResultActivity.class);
                 if (currentHeartRate > 0) {
                     intent.putExtra("RESULT_TEXT", String.valueOf(currentHeartRate));
@@ -161,7 +196,9 @@ public class MeasurementActivity extends AppCompatActivity {
     @Override
     protected void onDestroy() {
         super.onDestroy();
-        if (measurementTimer != null) { measurementTimer.cancel(); }
+        if (measurementTimer != null) {
+            measurementTimer.cancel();
+        }
         if (camera != null && camera.getCameraInfo().hasFlashUnit()) {
             camera.getCameraControl().enableTorch(false);
         }

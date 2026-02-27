@@ -2,46 +2,24 @@
 <androidx.constraintlayout.widget.ConstraintLayout
     xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:fitsSystemWindows="true"
-    android:background="@color/calm_background">
-
-    <LinearLayout
-        android:id="@+id/headerLayout"
-        android:layout_width="0dp"
-        android:layout_height="wrap_content"
-        android:background="@color/calm_surface"
-        android:gravity="center"
-        android:paddingVertical="15dp"
-        app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintEnd_toEndOf="parent">
-
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="Pomiar Tętna"
-            android:textColor="@color/calm_accent"
-            android:textSize="22sp"
-            android:textStyle="bold"/>
-    </LinearLayout>
+    android:background="@color/calm_background"
+    tools:context=".MeasurementActivity">
 
     <Button
         android:id="@+id/btnShowInstruction"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="Jak ułożyć palec? (Instrukcja)"
-        android:textSize="16sp"
-        android:textColor="@color/calm_accent"
+        android:text="Instrukcja"
         android:backgroundTint="@color/calm_surface"
-        android:paddingHorizontal="20dp"
-        android:paddingVertical="10dp"
-        android:layout_marginTop="10dp"
-        app:cornerRadius="20dp"
-        app:layout_constraintTop_toBottomOf="@id/headerLayout"
+        android:textColor="@color/text_primary"
+        android:layout_marginTop="16dp"
+        app:layout_constraintTop_toTopOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintEnd_toEndOf="parent" />
+        app:layout_constraintEnd_toEndOf="parent"/>
 
     <FrameLayout
         android:id="@+id/cameraContainer"
@@ -51,7 +29,7 @@
         android:layout_marginTop="15dp"
         android:layout_marginBottom="15dp"
         app:layout_constraintTop_toBottomOf="@id/btnShowInstruction"
-        app:layout_constraintBottom_toTopOf="@id/bottomPanel"
+        app:layout_constraintBottom_toTopOf="@id/btnStartMeasurement"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent">
 
@@ -59,15 +37,22 @@
             android:id="@+id/viewFinder"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
-            android:background="@color/calm_surface"
-            app:cardCornerRadius="20dp"
-            app:scaleType="fillCenter" />
+            android:background="@color/calm_surface" />
 
         <View
-            android:layout_width="80dp"
-            android:layout_height="80dp"
+            android:id="@+id/roiTarget"
+            android:layout_width="100dp"
+            android:layout_height="100dp"
             android:layout_gravity="center"
             android:background="@drawable/roi_overlay" />
+
+        <com.example.heartrateapp.RealtimeGraphView
+            android:id="@+id/realtimeGraph"
+            android:layout_width="match_parent"
+            android:layout_height="100dp"
+            android:layout_gravity="bottom"
+            android:layout_marginBottom="30dp"
+            android:layout_marginHorizontal="10dp"/>
 
         <TextView
             android:id="@+id/txtTimer"
@@ -75,7 +60,7 @@
             android:layout_height="wrap_content"
             android:layout_gravity="center|top"
             android:layout_marginTop="20dp"
-            android:text="Przygotowanie..."
+            android:text="Gotowy?"
             android:textColor="@color/calm_accent"
             android:textSize="28sp"
             android:textStyle="bold"
@@ -86,31 +71,19 @@
             android:shadowRadius="2"/>
     </FrameLayout>
 
-    <LinearLayout
-        android:id="@+id/bottomPanel"
-        android:layout_width="0dp"
-        android:layout_height="wrap_content"
-        android:orientation="vertical"
-        android:gravity="center_horizontal"
-        android:paddingTop="10dp"
-        android:paddingBottom="15dp"
-        android:background="@color/calm_surface"
+    <Button
+        android:id="@+id/btnStartMeasurement"
+        android:layout_width="match_parent"
+        android:layout_height="60dp"
+        android:layout_marginHorizontal="20dp"
+        android:layout_marginBottom="30dp"
+        android:text="Rozpocznij Pomiar"
+        android:backgroundTint="@color/calm_accent"
+        android:textColor="@color/calm_background"
+        android:textSize="18sp"
+        android:textStyle="bold"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintEnd_toEndOf="parent">
-
-        <Button
-            android:id="@+id/btnStartMeasurement"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="Rozpocznij Pomiar"
-            android:textColor="@color/calm_background"
-            android:backgroundTint="@color/calm_accent"
-            android:textStyle="bold"
-            android:paddingHorizontal="40dp"
-            android:paddingVertical="12dp"
-            app:cornerRadius="25dp"/>
-
-    </LinearLayout>
+        app:layout_constraintEnd_toEndOf="parent"/>
 
 </androidx.constraintlayout.widget.ConstraintLayout>

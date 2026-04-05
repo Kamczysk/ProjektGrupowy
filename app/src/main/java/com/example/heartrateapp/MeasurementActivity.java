@@ -88,7 +88,7 @@ public class MeasurementActivity extends AppCompatActivity {
             currentHeartRate = 0;
             txtTimer.setText("Przygotowanie...");
             // Dajemy chwilę na ustabilizowanie palca przed startem odliczania
-            viewFinder.postDelayed(() -> startTimer(), 1000);
+            viewFinder.postDelayed(this::startTimer, 1000);
         });
 
         // --- ANIMACJA ODDYCHAJĄCEGO OKRĘGU ---
@@ -171,7 +171,6 @@ public class MeasurementActivity extends AppCompatActivity {
                     }
                 }));
 
-                imageAnalysis.setAnalyzer(ContextCompat.getMainExecutor(this), new HeartRateAnalyzer());
                 CameraSelector cameraSelector = CameraSelector.DEFAULT_BACK_CAMERA;
 
                 try {
